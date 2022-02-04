@@ -1,0 +1,9 @@
+server:
+  port : 8080
+  host : "mysql"
+database:
+  dbname: "task_db"
+  dbuser: "root"
+  password : "123456"
+  
+  

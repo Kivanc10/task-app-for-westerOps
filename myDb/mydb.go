@@ -4,33 +4,64 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/Kivanc10/task-app-for-westerOps/models"
+	"github.com/kelseyhightower/envconfig"
+	"gopkg.in/yaml.v2"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
 
-const (
-	username       = "root"
-	password       = "123456"
-	host           = "mysql"
-	database_name1 = "task_db"
-)
+var cfg models.Config
+
+func processError(err error) {
+	fmt.Println(err)
+	os.Exit(2)
+}
+
+func readFile(cfg *models.Config) {
+	f, err := os.Open("config.yml")
+	if err != nil {
+		processError(err)
+	}
+	defer f.Close()
+
+	decoder := yaml.NewDecoder(f)
+	err = decoder.Decode(cfg)
+	if err != nil {
+		processError(err)
+	}
+}
+
+func readEnv(cfg *models.Config) {
+	err := envconfig.Process("", cfg)
+	if err != nil {
+		processError(err)
+	}
+}
 
 func dsn1() string {
-	return fmt.Sprintf("%s:%s@tcp(%s)/", username, password, host)
+	readFile(&cfg)
+	readEnv(&cfg)
+	fmt.Println(cfg)
+	return fmt.Sprintf("%s:%s@tcp(%s)/", cfg.Database.Username, cfg.Database.Password, cfg.Server.Host) //  username, password, host
 }
 
 func dsn2() string {
-	return fmt.Sprintf("%s:%s@tcp(%s)/%s?parseTime=true", username, password, host, database_name1)
+	readFile(&cfg)
+	readEnv(&cfg)
+	fmt.Println(cfg.Database, " ", cfg.Database.DbName)
+	return fmt.Sprintf("%s:%s@tcp(%s)/%s?parseTime=true", cfg.Database.Username, cfg.Database.Password, cfg.Server.Host, cfg.Database.DbName) // username, password, host, database_name1
 }
 
 func Connect() *gorm.DB {
+
 	db, err := gorm.Open(mysql.Open(dsn1()), &gorm.Config{})
 	if err != nil {
 		panic(err)
 	}
-	db.Exec("CREATE DATABASE IF NOT EXISTS " + database_name1)
+	db.Exec("CREATE DATABASE IF NOT EXISTS " + cfg.Database.DbName)
 	db, err = gorm.Open(mysql.Open(dsn2()), &gorm.Config{})
 
 	if err != nil {
