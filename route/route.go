@@ -80,6 +80,37 @@ func deleteTodoById(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func updateStateOfComplete(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	key := vars["id"]
+	i, err := strconv.ParseInt(key, 10, 64)
+	if err != nil {
+		panic(err)
+	}
+
+	completed := r.FormValue("completed")
+	if completed == "" { // via postman
+		rBody, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			w.WriteHeader(http.StatusBadGateway)
+			fmt.Fprintf(w, "An error occured during the get credentials")
+		}
+		if todo, err := models.ProcessToJson(rBody); err != nil {
+			w.WriteHeader(http.StatusBadGateway)
+			fmt.Fprintf(w, "An error occured during the get todo struct")
+		} else {
+			if todo.Completed != "" {
+				todo, err := mydb.UpdateStatueOfCompleteById(i, todo.Completed, db)
+				if err != nil {
+					w.WriteHeader(http.StatusNotAcceptable)
+					fmt.Fprintf(w, err.Error())
+				}
+				json.NewEncoder(w).Encode(todo)
+			}
+		}
+	}
+}
+
 func HandleRequest() {
 	db = mydb.Connect()
 	fmt.Println("connected to db")
@@ -89,5 +120,6 @@ func HandleRequest() {
 	r.HandleFunc("/todos/uncompleted", getAllUncompletedTodos)
 	r.HandleFunc("/todos/completed", getAllCompletedTodos)
 	r.HandleFunc("/delete/{id}", deleteTodoById).Methods("DELETE")
+	r.HandleFunc("/update/{id}", updateStateOfComplete).Methods("POST")
 	log.Fatal(http.ListenAndServe(":8080", r))
 }

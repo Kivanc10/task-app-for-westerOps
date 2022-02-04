@@ -118,3 +118,16 @@ func DeleteTodoById(id int64, db *gorm.DB) (models.Todo, error) {
 	}
 
 }
+
+func UpdateStatueOfCompleteById(id int64, completed string, db *gorm.DB) (models.Todo, error) {
+	var todo models.Todo
+	db.Where(map[string]interface{}{"id": id}).Find(&todo)
+	if todo.Context != "" && todo.Owner != "" {
+		//db.Where("id = ?", id).Update("completed", completed)
+		todo.Completed = completed
+		db.Save(&todo)
+		return todo, nil
+	} else {
+		return models.Todo{}, errors.New("İlgili todo bulunamadı")
+	}
+}
