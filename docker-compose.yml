@@ -1,0 +1,27 @@
+version: "3"
+services: 
+    todo-app-westerops:
+        container_name: todo-app-westerops
+        image: todo-app-westerops
+        restart: always
+        build: .
+        ports: 
+            - "8080:8080"
+    
+    mysql:
+        image: mysql:8.0
+        ports: 
+            - "33060:3306"
+        environment: 
+            MYSQL_ROOT_PASSWORD : "123456"
+            # MYSQL_USER : "root"
+            # MYSQL_RANDOM_ROOT_PASSWORD : "yes"
+            # MYSQL_PASSWORD : "root"
+            # MYSQL_DATABASE : "db_my_go_app"
+            # MYSQL_PORT : "3306"
+            # MYSQL_HOST : "db"
+        container_name: mysql_docker
+        volumes:
+            - mysql:/var/lib/mysql
+volumes: 
+    mysql:
