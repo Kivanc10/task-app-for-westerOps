@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/Kivanc10/task-app-for-westerOps/models"
 	mydb "github.com/Kivanc10/task-app-for-westerOps/myDb"
@@ -63,6 +64,22 @@ func getAllCompletedTodos(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(compTodos)
 }
 
+func deleteTodoById(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	key := vars["id"]
+	i, err := strconv.ParseInt(key, 10, 64)
+	if err != nil {
+		panic(err)
+	}
+	if _, err := mydb.DeleteTodoById(i, db); err != nil { // todo
+		w.WriteHeader(http.StatusNotAcceptable)
+		json.NewEncoder(w).Encode(err.Error())
+	} else {
+		json.NewEncoder(w).Encode("Todo başarılı bir şekilde kaldırıldı")
+
+	}
+}
+
 func HandleRequest() {
 	db = mydb.Connect()
 	fmt.Println("connected to db")
@@ -71,5 +88,6 @@ func HandleRequest() {
 	r.HandleFunc("/todos", getAllTodos)
 	r.HandleFunc("/todos/uncompleted", getAllUncompletedTodos)
 	r.HandleFunc("/todos/completed", getAllCompletedTodos)
+	r.HandleFunc("/delete/{id}", deleteTodoById).Methods("DELETE")
 	log.Fatal(http.ListenAndServe(":8080", r))
 }

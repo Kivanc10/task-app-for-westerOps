@@ -105,3 +105,16 @@ func CreateTodo(context, owner, completed string, db *gorm.DB) (*models.Todo, er
 	todo.Id = id
 	return &todo, nil
 }
+
+func DeleteTodoById(id int64, db *gorm.DB) (models.Todo, error) {
+	var todo models.Todo
+	db.Where(map[string]interface{}{"id": id}).Find(&todo)
+	if todo.Context != "" && todo.Owner != "" {
+		//db.Delete(todo)
+		db.Where("id = ?", id).Delete(&models.Todo{})
+		return todo, nil
+	} else {
+		return models.Todo{}, errors.New("İlgili todo bulunamadı")
+	}
+
+}
