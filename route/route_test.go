@@ -86,13 +86,68 @@ func Test_deleteTodoById(t *testing.T) {
 }
 
 func Test_getAllUncompletedTodos(t *testing.T) {
-
+	req, err := http.NewRequest("GET", "/todos/uncompleted", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(addTodo)
+	handler.ServeHTTP(rr, req)
+	if status := rr.Code; status != http.StatusOK {
+		t.Errorf("handler returned wrong status code: got %v want %v",
+			status, http.StatusOK)
+	}
+	var result []models.Todo
+	data, err := ioutil.ReadAll(rr.Body)
+	if err != nil {
+		t.Errorf("an error occured during the read the body")
+	}
+	json.Unmarshal(data, &result)
+	assert.NotEqual(t, result[0].Context, "")
 }
 
 func Test_getAllCompletedTodos(t *testing.T) {
-
+	req, err := http.NewRequest("GET", "/todos/completed", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(addTodo)
+	handler.ServeHTTP(rr, req)
+	if status := rr.Code; status != http.StatusOK {
+		t.Errorf("handler returned wrong status code: got %v want %v",
+			status, http.StatusOK)
+	}
+	var result []models.Todo
+	data, err := ioutil.ReadAll(rr.Body)
+	if err != nil {
+		t.Errorf("an error occured during the read the body")
+	}
+	json.Unmarshal(data, &result)
+	assert.NotEqual(t, result[0].Context, "")
 }
 
 func Test_updateStateOfComplete(t *testing.T) {
-
+	upd := map[string]interface{}{
+		"completed": "false",
+	}
+	byteUpd, _ := json.Marshal(upd)
+	req, err := http.NewRequest("GET", "/addTodo", bytes.NewReader(byteUpd))
+	if err != nil {
+		t.Fatal(err)
+	}
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(addTodo)
+	handler.ServeHTTP(rr, req)
+	if status := rr.Code; status != http.StatusOK {
+		t.Errorf("handler returned wrong status code: got %v want %v",
+			status, http.StatusOK)
+	}
+	data, err := ioutil.ReadAll(rr.Body)
+	if err != nil {
+		t.Errorf("an error occured during the read the body")
+	}
+	var result models.Todo
+	json.Unmarshal(data, &result)
+	assert.Equal(t, result.Completed, "false")
 }
