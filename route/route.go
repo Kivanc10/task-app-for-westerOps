@@ -16,6 +16,10 @@ import (
 
 var db *gorm.DB
 
+func init() {
+	db = mydb.Connect()
+}
+
 func addTodo(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
 		fmt.Fprintf(w, "Parse error :%v\n", err)
@@ -104,15 +108,17 @@ func updateStateOfComplete(w http.ResponseWriter, r *http.Request) {
 				if err != nil {
 					w.WriteHeader(http.StatusNotAcceptable)
 					fmt.Fprintf(w, err.Error())
+				} else {
+					json.NewEncoder(w).Encode(todo)
 				}
-				json.NewEncoder(w).Encode(todo)
+
 			}
 		}
 	}
 }
 
 func HandleRequest() {
-	db = mydb.Connect()
+	//db = mydb.Connect()
 	fmt.Println("connected to db")
 	r := mux.NewRouter()
 	r.HandleFunc("/addTodo", addTodo).Methods("POST")

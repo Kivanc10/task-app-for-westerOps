@@ -2,6 +2,7 @@ package mydb
 
 import (
 	"errors"
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -20,8 +21,8 @@ func processError(err error) {
 	os.Exit(2)
 }
 
-func readFile(cfg *models.Config) {
-	f, err := os.Open("config.yml")
+func readFile(cfg *models.Config, filepath string) {
+	f, err := os.Open(filepath)
 	if err != nil {
 		processError(err)
 	}
@@ -34,35 +35,52 @@ func readFile(cfg *models.Config) {
 	}
 }
 
-func readEnv(cfg *models.Config) {
+func readEnv(cfg *models.Config, filepath string) {
 	err := envconfig.Process("", cfg)
 	if err != nil {
 		processError(err)
 	}
 }
 
-func dsn1() string {
-	readFile(&cfg)
-	readEnv(&cfg)
-	fmt.Println(cfg)
+/*
+func init() { //---------
+	readFile(&cfg,"config.yml")
+	readEnv(&cfg,"config.yml")
+}
+*/
+func dsn1(filepath string) string {
+	readFile(&cfg, filepath)
+	readEnv(&cfg, filepath)
 	return fmt.Sprintf("%s:%s@tcp(%s)/", cfg.Database.Username, cfg.Database.Password, cfg.Server.Host) //  username, password, host
 }
 
-func dsn2() string {
-	readFile(&cfg)
-	readEnv(&cfg)
-	fmt.Println(cfg.Database, " ", cfg.Database.DbName)
+func dsn2(filepath string) string {
+	readFile(&cfg, filepath)
+	readEnv(&cfg, filepath)
+	// fmt.Println(cfg.Database, " ", cfg.Database.DbName)
 	return fmt.Sprintf("%s:%s@tcp(%s)/%s?parseTime=true", cfg.Database.Username, cfg.Database.Password, cfg.Server.Host, cfg.Database.DbName) // username, password, host, database_name1
 }
 
-func Connect() *gorm.DB {
+/*
+func isTestRun() bool {
+	return flag.Lookup("test.v").Value.(flag.Getter).Get().(bool)
+}
+*/
 
-	db, err := gorm.Open(mysql.Open(dsn1()), &gorm.Config{})
+func Connect() *gorm.DB {
+	var filepath string
+	if flag.Lookup("test.v") == nil { // normal execution
+		filepath = "config.yml"
+	} else { // test execution
+		filepath = "../config.yml"
+	}
+
+	db, err := gorm.Open(mysql.Open(dsn1(filepath)), &gorm.Config{})
 	if err != nil {
 		panic(err)
 	}
 	db.Exec("CREATE DATABASE IF NOT EXISTS " + cfg.Database.DbName)
-	db, err = gorm.Open(mysql.Open(dsn2()), &gorm.Config{})
+	db, err = gorm.Open(mysql.Open(dsn2(filepath)), &gorm.Config{})
 
 	if err != nil {
 		panic(err)
