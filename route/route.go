@@ -45,8 +45,10 @@ func addTodo(w http.ResponseWriter, r *http.Request) {
 				if err != nil {
 					w.WriteHeader(http.StatusNotAcceptable)
 					fmt.Fprintf(w, err.Error())
+				} else {
+					json.NewEncoder(w).Encode(todo)
 				}
-				json.NewEncoder(w).Encode(todo)
+
 			}
 		}
 	}
